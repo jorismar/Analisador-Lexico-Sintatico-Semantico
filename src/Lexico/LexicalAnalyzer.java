@@ -140,10 +140,10 @@ public class LexicalAnalyzer {
     }
     
     public static void printTable() {
-        System.out.print("TOKEN      TYPE       LINE\n___________________________\n");
+        System.out.print("TOKEN      TYPE       LINE\n---------------------------------\n");
         
         for(Token tk:table) {
-            System.out.println("" + tk.getToken() + "\t" + tk.getType() + "\t" + tk.getLine());
+            System.out.println("" + tk.getToken() + "\t" + tk.getType() + "\t" + tk.getLine() + "\t|");
         }
     }
 }
