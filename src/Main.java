@@ -19,7 +19,7 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            if(LexicalAnalyzer.analyzeFile("D:\\teste.txt"))
+            if(LexicalAnalyzer.analyzeFile("/home/chacon/Documentos/teste.txt"))
                 LexicalAnalyzer.printTable();
         } catch (IOException ex) {
             System.err.println("Error: File cannot opened!");
