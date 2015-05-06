@@ -28,86 +28,89 @@ public class LexicalAnalyzer {
                 words = line.split(" ");
                 
                 for(String word:words) {
-                    for(int i = 0; i < word.length(); i++) {
-                        c = word.charAt(i);
-                        if(c == '\t') continue;
-                        
-                        if(!isComment) {
-                            if(language.getNumbersAlphabet().contains("" + c)) { // Verifica se é um valor inteiro ou real
-                                aux = identify(word, language.getValueAlphabet(), nline, i);
-                                
-                                if(aux.contains("" + '.')) table.add(new Token(aux, Token.Type.DOUBLE_NUMBER.name(), nline));
-                                    else table.add(new Token(aux, Token.Type.INTEGER_NUMBER.name(), nline));
-            
-                                i += aux.length() - 1;
-                            }
-                            else if(language.getIdentifiersAlphabet().contains("" + c)) { // Verifica se é um identificador ou palavra reservada
-                                aux = identify(word, language.getIdentifiersAlphabet(), nline, i);
+                    if(!isComment || word.contains(language.getCloseCommentSimbol())) { // <---- LINHA ADICIONADA
+                        for(int i = 0; i < word.length(); i++) {
+                            c = word.charAt(i);
+                            if(c == '\t') continue;
 
-                                if(language.getReservedWordsAlphabet().contains(aux)) {
-                                    if(language.getAddOperatorsAlphabet().contains(aux))
-                                        table.add(new Token(aux, Token.Type.ADD_OPERATOR.name(), nline));
-                                    else if(language.getMultOperatorsAlphabet().contains(aux))
-                                        table.add(new Token(aux, Token.Type.MULT_OPERATOR.name(), nline));
-                                    else
-                                        table.add(new Token(aux, Token.Type.RESERVED_WORD.name(), nline));
-                                } else table.add(new Token(aux, Token.Type.IDENTIFIER.name(), nline));
-                                
-                                i += aux.length() - 1;
-                            }
-                            else if(language.getAssignOperatorsAlphabet().contains("" + c)) {
-                                aux = identify(word, language.getAssignOperatorsAlphabet(), nline, i);
-                                
-                                if(aux.contains(language.getAssignOperatorsAlphabet()) && aux.length() == language.getAssignOperatorsAlphabet().length())
-                                    table.add(new Token(aux, Token.Type.ASSIGN_OPERATOR.name(), nline));
-                                else if(language.getRelatOperatorsAlphabet().contains(aux))
-                                    table.add(new Token(aux, Token.Type.RELAT_OPERATOR.name(), nline));
-                                else 
-                                    table.add(new Token(aux, Token.Type.DELIMITER.name(), nline));
-                                
-                                i += aux.length() - 1;
-                            }
-                            else if(language.getDelimitersAlphabet().contains("" + c)) {
-                                    //table.add(new Token("" + c, Token.Type.DELIMITER.name(), nline));
-                                    aux = identify(word, language.getDelimitersAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
-                                    table.add(new Token(aux, Token.Type.DELIMITER.name(), nline));
+                            if(!isComment) {
+                                if(language.getNumbersAlphabet().contains("" + c)) { // Verifica se é um valor inteiro ou real
+                                    aux = identify(word, language.getValueAlphabet(), nline, i);
+
+                                    if(aux.contains("" + '.')) table.add(new Token(aux, Token.Type.DOUBLE_NUMBER.name(), nline));
+                                        else table.add(new Token(aux, Token.Type.INTEGER_NUMBER.name(), nline));
+
+                                    i += aux.length() - 1;
+                                }
+                                else if(language.getIdentifiersAlphabet().contains("" + c)) { // Verifica se é um identificador ou palavra reservada
+                                    aux = identify(word, language.getIdentifiersAlphabet(), nline, i);
+
+                                    if(language.getReservedWordsAlphabet().contains(aux)) {
+                                        if(language.getAddOperatorsAlphabet().contains(aux))
+                                            table.add(new Token(aux, Token.Type.ADD_OPERATOR.name(), nline));
+                                        else if(language.getMultOperatorsAlphabet().contains(aux))
+                                            table.add(new Token(aux, Token.Type.MULT_OPERATOR.name(), nline));
+                                        else
+                                            table.add(new Token(aux, Token.Type.RESERVED_WORD.name(), nline));
+                                    } else table.add(new Token(aux, Token.Type.IDENTIFIER.name(), nline));
+
+                                    i += aux.length() - 1;
+                                }
+                                else if(language.getAssignOperatorsAlphabet().contains("" + c)) {
+                                    aux = identify(word, language.getAssignOperatorsAlphabet(), nline, i);
+
+                                    if(aux.contains(language.getAssignOperatorsAlphabet()) && aux.length() == language.getAssignOperatorsAlphabet().length())
+                                        table.add(new Token(aux, Token.Type.ASSIGN_OPERATOR.name(), nline));
+                                    else if(language.getRelatOperatorsAlphabet().contains(aux))
+                                        table.add(new Token(aux, Token.Type.RELAT_OPERATOR.name(), nline));
+                                    else 
+                                        table.add(new Token(aux, Token.Type.DELIMITER.name(), nline));
+
+                                    i += aux.length() - 1;
+                                }
+                                else if(language.getDelimitersAlphabet().contains("" + c)) {
+                                        //table.add(new Token("" + c, Token.Type.DELIMITER.name(), nline));
+                                        aux = identify(word, language.getDelimitersAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
+                                        table.add(new Token(aux, Token.Type.DELIMITER.name(), nline));
+
+                                        i += aux.length() - 1;
+                                }
+                                else if(language.getAddOperatorsAlphabet().contains("" + c)) {
+                                    //table.add(new Token("" + c, Token.Type.ADD_OPERATOR.name(), nline));
+                                    aux = identify(word, language.getAddOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
+                                    table.add(new Token(aux, Token.Type.ADD_OPERATOR.name(), nline));
+
+                                    i += aux.length() - 1;
+                                }
+                                else if(language.getMultOperatorsAlphabet().contains("" + c)) {
+                                    //table.add(new Token("" + c, Token.Type.MULT_OPERATOR.name(), nline));
+                                    aux = identify(word, language.getMultOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
+                                    table.add(new Token(aux, Token.Type.MULT_OPERATOR.name(), nline));
+
+                                    i += aux.length() - 1;
+                                }
+                                else if(language.getRelatOperatorsAlphabet().contains("" + c)) {
+                                    aux = identify(word, language.getRelatOperatorsAlphabet(), nline, i);
+
+                                    if(language.getRelatOperatorsAlphabet().contains(aux))
+                                        table.add(new Token(aux, Token.Type.RELAT_OPERATOR.name(), nline));
+                                    // <--- SE A SEQUÊNCIA ESTIVER INCORRETA(=> =< >< ==)?
                                     
                                     i += aux.length() - 1;
-                            }
-                            else if(language.getAddOperatorsAlphabet().contains("" + c)) {
-                                //table.add(new Token("" + c, Token.Type.ADD_OPERATOR.name(), nline));
-                                aux = identify(word, language.getAddOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
-                                table.add(new Token(aux, Token.Type.ADD_OPERATOR.name(), nline));
+                                }
+                                else if(language.getOpenCommentSimbol().contains("" + c)) {
+                                    isComment = true;
+                                    open_comment_line = nline;
+                                }
+                                else {
+                                    System.err.println("Error ln:" + nline + " - invalid character (" + c + ")");
+                                    return false;
+                                }
 
-                                i += aux.length() - 1;
+                                aux = "";
+                            } else if(language.getCloseCommentSimbol().contains("" + c)) {
+                                isComment = false;
                             }
-                            else if(language.getMultOperatorsAlphabet().contains("" + c)) {
-                                //table.add(new Token("" + c, Token.Type.MULT_OPERATOR.name(), nline));
-                                aux = identify(word, language.getMultOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
-                                table.add(new Token(aux, Token.Type.MULT_OPERATOR.name(), nline));
-
-                                i += aux.length() - 1;
-                            }
-                            else if(language.getRelatOperatorsAlphabet().contains("" + c)) {
-                                aux = identify(word, language.getRelatOperatorsAlphabet(), nline, i);
-                                
-                                if(language.getRelatOperatorsAlphabet().contains(aux))
-                                    table.add(new Token(aux, Token.Type.RELAT_OPERATOR.name(), nline));
-                                
-                                i += aux.length() - 1;
-                            }
-                            else if(language.getOpenCommentSimbol().contains("" + c)) {
-                                isComment = true;
-                                open_comment_line = nline;
-                            }
-                            else {
-                                System.err.println("Error ln:" + nline + " - invalid character (" + c + ")");
-                                return false;
-                            }
-                            
-                            aux = "";
-                        } else if(language.getCloseCommentSimbol().contains("" + c)) {
-                            isComment = false;
                         }
                     }
                 }
@@ -122,16 +125,16 @@ public class LexicalAnalyzer {
         return true;
     }
     
-    public static String identify(String word, String list, long nline, int pos) {
+    public static String identify(String word, String list, long nline, int current_pos) {
         String aux = "";
         char c;
         
         do {
-            c = word.charAt(pos++);
+            c = word.charAt(current_pos++);
             
             if(list.contains("" + c)) aux += c;
                 else break;
-        } while(pos < word.length());
+        } while(current_pos < word.length());
         
         return aux;
     }
