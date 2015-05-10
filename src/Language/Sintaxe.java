@@ -5,6 +5,8 @@
  */
 package Language;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Jorismar
@@ -22,5 +24,7 @@ public interface Sintaxe {
     public String getValueAlphabet();
     public String getOpenCommentSimbol();
     public String getCloseCommentSimbol();
-    
+//    public boolean programInitCheck(String str);
+//    public boolean varDeclarationCheck(String str);
+//    public boolean funcDeclarationCheck(String str);
 }
