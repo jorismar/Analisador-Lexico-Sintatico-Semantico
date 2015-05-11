@@ -5,10 +5,16 @@
  */
 package Analizer;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Jorismar
  */
 public class SyntaxAnalyzer {
-    
+    public static void analyzeTable(ArrayList<Token> table) {
+        if(table.get(0).getType().equals(Token.Type.RESERVED_WORD.name())){
+            
+        }
+    }
 }
