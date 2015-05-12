@@ -1,4 +1,4 @@
-import Lexico.LexicalAnalyzer;
+import Analizer.Compiler;
 import java.io.IOException;
 
 /*
@@ -18,8 +18,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            if(LexicalAnalyzer.analyzeFile("/home/chacon/Documentos/teste.txt"))
-                LexicalAnalyzer.printTable();
+            if(Compiler.LexicalAnalyzer("/home/chacon/Documentos/teste.txt"))
+                Compiler.printTable();
         } catch (IOException ex) {
             System.err.println("Error: File cannot opened!");
         }
