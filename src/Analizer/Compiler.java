@@ -131,18 +131,6 @@ public class Compiler {
         return true;
     }
     
-    public static void SyntaxAnalyzer() {
-        Iterator<Token> itable = table.iterator();
-        
-        if(nextName(itable, "program")){
-            if(nextType(itable, Type.IDENTIFIER)) {
-                if(nextName(itable, ";")) {
-                    
-                }
-            }
-        }
-    }
-    
     public static String identify(String word, String list, long nline, int current_pos) {
         String aux = "";
         char c;
@@ -157,23 +145,205 @@ public class Compiler {
         return aux;
     }
     
-    public static boolean addToken(String name, Type tp, long nline) {
-        return table.add(new Token(name, tp.name(), nline));
-    }
-    
-    public static boolean nextName(Iterator<Token> it, String name) {
-        return it.hasNext() && it.next().getName().equals(name);
-    }
-    
-    public static boolean nextType(Iterator<Token> it, Type tp) {
-        return it.hasNext() && it.next().getType().equals(tp.name());
-    }
-
     public static void printTable() {
         System.out.print("TOKEN      TYPE       LINE\n---------------------------------\n");
         
         for(Token tk:table) {
             System.out.println("" + tk.getName() + "\t" + tk.getType() + "\t" + tk.getLine() + "\t|");
         }
+    }
+
+    public static void SyntaxAnalyzer() {
+        Iterator<Token> itable = table.iterator();
+        
+        if( nextToken(itable).getName().equals("program") && nextToken(itable).getType().equals(Type.IDENTIFIER.name()) && nextToken(itable).getName().equals(";")){
+            startProgram(itable);
+        } else err_stop("Error ln: 1 program start error");
+    }
+    
+    public static Token startProgram(Iterator<Token> it) {
+        Token tk;
+                    
+        while(it.hasNext()) {
+            tk = nextToken(it);
+            if(tk.getName().equals("var"))
+                tk = listVarDeclaration(it);
+
+            if(tk.getName().equals("procedure")) {
+                tk = subprogramDeclaration(it);
+                if(tk.getName().equals("end"))
+                    tk = nextToken(it);
+                else err_stop("Error ln: " + tk.getLine() + " expected a end");
+            }
+            
+            if(tk.getName().equals("begin"))
+            
+            
+        }
+
+        return tk;
+    }
+    
+    /*
+        variável := expressão
+        | ativação_de_procedimento
+        | comando_composto
+        | if expressão then comando parte_else
+        | while expressão do comando 
+    */
+    
+    public static Token command(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        if(tk.getType().equals(Type.IDENTIFIER.name())) {
+            tk = nextToken(it);
+            if(tk.getType().equals(Type.ASSIGN_OPERATOR.name()))
+                tk = expression(it);
+        }
+        
+        if()
+            
+    }
+    
+    public static Token expression(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        
+        
+        
+        return tk;
+    }
+    
+    public static Token simpleExpression(Iterator<Token> it) {
+        
+    }
+    
+    public static Token term(Iterator<Token> it) {
+        Token tk;
+        
+        tk = factor(it);
+        
+        if(isEquals(tk, Type.MULT_OPERATOR))
+            tk = term(it);
+        
+        return tk;
+    }
+    
+    public static Token factor(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        if(isEquals(tk, Type.IDENTIFIER)) {
+            tk = nextToken(it);
+            if(isEquals(tk, "(")) {
+                tk = expressionList(it);
+                if(!isEquals(tk, ")"))
+                    err_stop("Error ln: " + tk.getLine() + " expected a )");
+            }
+        } else if(isEquals(tk, Type.INTEGER_NUMBER) || isEquals(tk, Type.DOUBLE_NUMBER) || isEquals(tk, "true") || isEquals(tk, "false")) {
+            tk = nextToken(it);
+        } else if(isEquals(tk, "not")) {
+            tk = factor(it);
+        }
+        
+        return tk;
+    }
+    
+    public static Token listVarDeclaration(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        while(tk.getType().equals(Type.IDENTIFIER.name())) {
+            if(varDeclaration(it))
+                tk = nextToken(it);
+        }
+        
+        return tk;
+    }
+    
+    public static boolean varDeclaration(Iterator<Token> it) {
+        Token tk = listIdentifiers(it);
+        
+        if(tk.getName().equals(":")) {
+            if(isVarType(nextToken(it))) {
+                tk = nextToken(it);
+                
+                if(tk.getName().equals(";")) {
+                    return true;
+                } else err_stop("Error ln: " + tk.getLine() + " expected a ;");
+            }
+        } else err_stop("Error ln: " + tk.getLine() + " expected a :");
+        
+        return false;
+    }
+    
+    public static Token listIdentifiers(Iterator<Token> it) {
+        Token tk = nextToken(it); // verificar
+        
+        while(tk.getName().equals(",")) {
+            tk = nextToken(it);
+            if(tk.getType().equals(Type.IDENTIFIER.name()))
+                tk = nextToken(it);
+            else err_stop("Error ln: " + tk.getLine() + " expected a identifier");
+        }
+
+        return tk;
+    }
+    
+    public static boolean isVarType(Token tk) {
+        if(!(tk.getName().equals("integer") || tk.getName().equals("boolean") || tk.getName().equals("real")))
+            err_stop("Error ln: " + tk.getLine() + " invalid type.");
+        
+        return true;
+    }
+
+    public static Token subprogramDeclaration(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        if(tk.getType().equals(Type.IDENTIFIER.name())) {
+            if(nextToken(it).getName().equals("(")) {
+                if(argumentList(it).getName().equals(")")) {
+                    if(nextToken(it).getName().equals(";")) {
+                        return startProgram(it);
+                    } else err_stop("Error ln: " + tk.getLine() + " expected a ;");
+                } else err_stop("Error ln: " + tk.getLine() + " expected a )");
+            } else err_stop("Error ln: " + tk.getLine() + " expected a (");
+        } else err_stop("Error ln: " + tk.getLine() + " expected a identifier");
+        
+        return null;
+    }
+    
+    public static Token argumentList(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        while(tk.getType().equals(Type.IDENTIFIER.name())) {
+            tk = listIdentifiers(it);
+            if(tk.getName().equals(":") && isVarType(nextToken(it))) {
+                tk = nextToken(it);
+                if(tk.getName().equals(";"))
+                    tk = nextToken(it);
+            } else err_stop("Error ln: " + tk.getLine() + " expected a :");
+        }
+        
+        return tk;
+    }
+    
+    public static boolean addToken(String name, Type tp, long nline) {
+        return table.add(new Token(name, tp.name(), nline));
+    }
+    
+    public static Token nextToken(Iterator<Token> it) {
+        return it.hasNext() ? it.next() : null;
+    }
+    
+    public static boolean isEquals(Token tk, String name) {
+        return tk.getName().equals(name);
+    }
+    
+    public static boolean isEquals(Token tk, Type tp) {
+        return tk.getType().equals(tp.name());
+    }
+    
+    public static void err_stop(String str) {
+        System.err.println(str);
+        System.exit(1);
     }
 }
