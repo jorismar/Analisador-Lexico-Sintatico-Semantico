@@ -169,6 +169,9 @@ public class Compiler {
                     err_stop("Error ln: " + tk.getLine() + " expected a .");
             } else err_stop("Error ln: " + tk.getLine() + " expected a end");
         } else err_stop("Error ln: 1 program start error");
+        
+        System.out.println("Syntax is correct!");
+        
     }
     
     public static Token startProgram(Iterator<Token> it) {
