@@ -34,13 +34,13 @@ public class Compiler {
                 words = line.split(" ");
 
                 for(String word:words) {
-                    if(!isComment || word.contains(language.getCloseCommentSimbol())) { // <---- LINHA ADICIONADA
+                    if(!isComment || word.contains(language.getCloseCommentSimbol())) {
                         for(int i = 0; i < word.length(); i++) {
                             c = word.charAt(i);
                             if(c == '\t') continue;
 
                             if(!isComment) {
-                                if(language.getNumbersAlphabet().contains("" + c)) { // Verifica se é um valor inteiro ou real
+                                if(language.getNumbersAlphabet().contains("" + c)) {
                                     aux = identify(word, language.getValueAlphabet(), nline, i);
 
                                     if(aux.contains("" + '.')) addToken(aux, Type.DOUBLE_NUMBER, nline);
@@ -48,7 +48,7 @@ public class Compiler {
 
                                     i += aux.length() - 1;
                                 }
-                                else if(language.getIdentifiersAlphabet().contains("" + c)) { // Verifica se é um identificador ou palavra reservada
+                                else if(language.getIdentifiersAlphabet().contains("" + c)) { 
                                     aux = identify(word, language.getIdentifiersAlphabet(), nline, i);
 
                                     if(language.getReservedWordsAlphabet().contains(aux)) {
@@ -75,22 +75,21 @@ public class Compiler {
                                     i += aux.length() - 1;
                                 }
                                 else if(language.getDelimitersAlphabet().contains("" + c)) {
-                                        //addToken("" + c, Type.DELIMITER, nline);
-                                        aux = identify(word, language.getDelimitersAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
-                                        addToken(aux, Type.DELIMITER, nline);
+                                        aux = identify(word, language.getDelimitersAlphabet(), nline, i); 
+                                        
+                                        for(int k = 0; k < aux.length(); k++)
+                                            addToken("" + aux.charAt(k), Type.DELIMITER, nline);
 
                                         i += aux.length() - 1;
                                 }
                                 else if(language.getAddOperatorsAlphabet().contains("" + c)) {
-                                    //addToken("" + c, Type.ADD_OPERATOR, nline);
-                                    aux = identify(word, language.getAddOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
+                                    aux = identify(word, language.getAddOperatorsAlphabet(), nline, i); 
                                     addToken(aux, Type.ADD_OPERATOR, nline);
 
                                     i += aux.length() - 1;
                                 }
                                 else if(language.getMultOperatorsAlphabet().contains("" + c)) {
-                                    //addToken("" + c, Type.MULT_OPERATOR, nline);
-                                    aux = identify(word, language.getMultOperatorsAlphabet(), nline, i); // Não há necessidade da chamada de identify, porém caso o alfabeto mude, para mais de um símbolo em algum elemento
+                                    aux = identify(word, language.getMultOperatorsAlphabet(), nline, i); 
                                     addToken(aux, Type.MULT_OPERATOR, nline);
 
                                     i += aux.length() - 1;
@@ -100,7 +99,10 @@ public class Compiler {
 
                                     if(language.getRelatOperatorsAlphabet().contains(aux))
                                         addToken(aux, Type.RELAT_OPERATOR, nline);
-                                    // <--- SE A SEQUÊNCIA ESTIVER INCORRETA(=> =< >< ==)? TRATAR COMO DOIS OPERADORES
+                                    else {
+                                        for(int k = 0; k < aux.length(); k++)
+                                            addToken("" + aux.charAt(k), Type.DELIMITER, nline);
+                                    }
                                     
                                     i += aux.length() - 1;
                                 }
@@ -155,67 +157,127 @@ public class Compiler {
 
     public static void SyntaxAnalyzer() {
         Iterator<Token> itable = table.iterator();
+        Token tk;
         
-        if( nextToken(itable).getName().equals("program") && nextToken(itable).getType().equals(Type.IDENTIFIER.name()) && nextToken(itable).getName().equals(";")){
-            startProgram(itable);
+        if( isEquals(nextToken(itable), "program") && isEquals(nextToken(itable), Type.IDENTIFIER) && isEquals(nextToken(itable), ";")){
+            tk = startProgram(itable);
+
+            if(isEquals(tk, "end")) {
+                tk = nextToken(itable);
+                
+                if(!isEquals(tk, "."))
+                    err_stop("Error ln: " + tk.getLine() + " expected a .");
+            } else err_stop("Error ln: " + tk.getLine() + " expected a end");
         } else err_stop("Error ln: 1 program start error");
     }
     
     public static Token startProgram(Iterator<Token> it) {
-        Token tk;
+        Token tk = null;
                     
         while(it.hasNext()) {
             tk = nextToken(it);
-            if(tk.getName().equals("var"))
+            
+            if(isEquals(tk, "var"))
                 tk = listVarDeclaration(it);
 
-            if(tk.getName().equals("procedure")) {
+            if(isEquals(tk, "procedure")) {
                 tk = subprogramDeclaration(it);
-                if(tk.getName().equals("end"))
+                if(isEquals(tk, "end")) 
                     tk = nextToken(it);
                 else err_stop("Error ln: " + tk.getLine() + " expected a end");
             }
             
-            if(tk.getName().equals("begin"))
-            
-            
+            if(isEquals(tk, "begin")) {
+                tk = OptCommands(it);
+                if(isEquals(tk, "end")) {
+                    break;
+                } else err_stop("Error ln: " + tk.getLine() + " expected a end");                
+            }
+        }
+
+        return tk;
+    }
+
+    public static Token OptCommands(Iterator<Token> it) {
+       return commandList(it);
+    }
+    
+    public static Token commandList(Iterator<Token> it) {
+        Token tk;
+        
+        tk = command(it);
+        
+        if(isEquals(tk, ";"))
+            tk = commandList(it);
+        
+        return tk;
+    }
+    
+    public static Token command(Iterator<Token> it) {
+        Token tk = nextToken(it);
+        
+        if(isEquals(tk, Type.IDENTIFIER)) {
+            tk = nextToken(it);
+            if(isEquals(tk, Type.ASSIGN_OPERATOR)) {
+                tk = expression(it);
+            } else if(isEquals(tk, "(")) {
+                tk = expressionList(it);
+                if(!isEquals(tk, ")"))
+                    err_stop("Error ln: " + tk.getLine() + " expected a )");
+            }
+        } else if(isEquals(tk, "begin")) {
+            tk = OptCommands(it);
+            if(isEquals(tk, "end"))
+                tk = command(it);
+            else err_stop("Error ln: " + tk.getLine() + " expected a end");
+        } else if(isEquals(tk, "if")) {
+                tk = expression(it);
+            if(isEquals(tk, "then")) {
+                tk = command(it);
+                if(isEquals(tk, "else"))
+                    tk = command(it);
+            } else err_stop("Error ln: " + tk.getLine() + " expected a then");
+        } else if(isEquals(tk, "while")) {
+            tk = expression(it);
+            if(isEquals(tk, "do"))
+                tk = command(it);
+            else err_stop("Error ln: " + tk.getLine() + " expected a do");
         }
 
         return tk;
     }
     
-    /*
-        variável := expressão
-        | ativação_de_procedimento
-        | comando_composto
-        | if expressão then comando parte_else
-        | while expressão do comando 
-    */
-    
-    public static Token command(Iterator<Token> it) {
-        Token tk = nextToken(it);
+    public static Token expressionList(Iterator<Token> it) {
+        Token tk;
         
-        if(tk.getType().equals(Type.IDENTIFIER.name())) {
-            tk = nextToken(it);
-            if(tk.getType().equals(Type.ASSIGN_OPERATOR.name()))
-                tk = expression(it);
-        }
+        tk = expression(it);
         
-        if()
-            
+        if(isEquals(tk, ","))
+            tk = expressionList(it);
+        
+        return tk;
     }
     
     public static Token expression(Iterator<Token> it) {
-        Token tk = nextToken(it);
+        Token tk;
         
+        tk = simpleExpression(it);
         
-        
+        if(isEquals(tk, Type.RELAT_OPERATOR))
+            tk = simpleExpression(it);
         
         return tk;
     }
     
     public static Token simpleExpression(Iterator<Token> it) {
+        Token tk;
         
+        tk = term(it);
+        
+        if(isEquals(tk, Type.ADD_OPERATOR))
+            tk = simpleExpression(it);
+        
+        return tk;
     }
     
     public static Token term(Iterator<Token> it) {
@@ -243,7 +305,14 @@ public class Compiler {
             tk = nextToken(it);
         } else if(isEquals(tk, "not")) {
             tk = factor(it);
-        }
+        } else if(isEquals(tk, "+") || isEquals(tk, "-")) {
+            tk = term(it);
+        } else if(isEquals(tk, "(")) {
+            tk = expression(it);
+            if(isEquals(tk, ")"))
+                tk = nextToken(it);
+            else err_stop("Error ln: " + tk.getLine() + " expected a )");
+        }else err_stop("Error ln: " + tk.getLine() + " invalid expression");
         
         return tk;
     }
@@ -251,7 +320,7 @@ public class Compiler {
     public static Token listVarDeclaration(Iterator<Token> it) {
         Token tk = nextToken(it);
         
-        while(tk.getType().equals(Type.IDENTIFIER.name())) {
+        while(isEquals(tk, Type.IDENTIFIER)) {
             if(varDeclaration(it))
                 tk = nextToken(it);
         }
@@ -262,11 +331,11 @@ public class Compiler {
     public static boolean varDeclaration(Iterator<Token> it) {
         Token tk = listIdentifiers(it);
         
-        if(tk.getName().equals(":")) {
+        if(isEquals(tk, ":")) {
             if(isVarType(nextToken(it))) {
                 tk = nextToken(it);
                 
-                if(tk.getName().equals(";")) {
+                if(isEquals(tk, ";")) {
                     return true;
                 } else err_stop("Error ln: " + tk.getLine() + " expected a ;");
             }
@@ -278,9 +347,9 @@ public class Compiler {
     public static Token listIdentifiers(Iterator<Token> it) {
         Token tk = nextToken(it); // verificar
         
-        while(tk.getName().equals(",")) {
+        while(isEquals(tk, ",")) {
             tk = nextToken(it);
-            if(tk.getType().equals(Type.IDENTIFIER.name()))
+            if(isEquals(tk, Type.IDENTIFIER))
                 tk = nextToken(it);
             else err_stop("Error ln: " + tk.getLine() + " expected a identifier");
         }
@@ -289,7 +358,7 @@ public class Compiler {
     }
     
     public static boolean isVarType(Token tk) {
-        if(!(tk.getName().equals("integer") || tk.getName().equals("boolean") || tk.getName().equals("real")))
+        if(!(isEquals(tk, "integer") || isEquals(tk, "boolean") || isEquals(tk, "real")))
             err_stop("Error ln: " + tk.getLine() + " invalid type.");
         
         return true;
@@ -298,10 +367,10 @@ public class Compiler {
     public static Token subprogramDeclaration(Iterator<Token> it) {
         Token tk = nextToken(it);
         
-        if(tk.getType().equals(Type.IDENTIFIER.name())) {
-            if(nextToken(it).getName().equals("(")) {
-                if(argumentList(it).getName().equals(")")) {
-                    if(nextToken(it).getName().equals(";")) {
+        if(isEquals(tk, Type.IDENTIFIER)) {
+            if(isEquals(nextToken(it), "(")) {
+                if(isEquals(argumentList(it), ")")) {
+                    if(isEquals(nextToken(it),";")) {
                         return startProgram(it);
                     } else err_stop("Error ln: " + tk.getLine() + " expected a ;");
                 } else err_stop("Error ln: " + tk.getLine() + " expected a )");
@@ -314,11 +383,11 @@ public class Compiler {
     public static Token argumentList(Iterator<Token> it) {
         Token tk = nextToken(it);
         
-        while(tk.getType().equals(Type.IDENTIFIER.name())) {
+        while(isEquals(tk, Type.IDENTIFIER)) {
             tk = listIdentifiers(it);
-            if(tk.getName().equals(":") && isVarType(nextToken(it))) {
+            if(isEquals(tk, ":") && isVarType(nextToken(it))) {
                 tk = nextToken(it);
-                if(tk.getName().equals(";"))
+                if(isEquals(tk, ";"))
                     tk = nextToken(it);
             } else err_stop("Error ln: " + tk.getLine() + " expected a :");
         }
@@ -331,7 +400,12 @@ public class Compiler {
     }
     
     public static Token nextToken(Iterator<Token> it) {
-        return it.hasNext() ? it.next() : null;
+        Token tk = it.hasNext() ? it.next() : null;
+        
+        if(tk == null)
+            err_stop("Error: reached the end of the list, the program is not completed");
+        
+        return tk;
     }
     
     public static boolean isEquals(Token tk, String name) {

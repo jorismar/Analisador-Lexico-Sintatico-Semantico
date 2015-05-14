@@ -18,8 +18,11 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            if(Compiler.LexicalAnalyzer("/home/chacon/Documentos/teste.txt"))
+            if(Compiler.LexicalAnalyzer("D:/teste.txt")) {
                 Compiler.printTable();
+                Compiler.SyntaxAnalyzer();
+            }
+                
         } catch (IOException ex) {
             System.err.println("Error: File cannot opened!");
         }
