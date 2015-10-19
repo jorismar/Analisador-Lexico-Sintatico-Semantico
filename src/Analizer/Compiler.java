@@ -11,119 +11,145 @@ import java.util.Iterator;
 public class Compiler {
     public static LanguageX language = new LanguageX();
     public static ArrayList<Token> table = new ArrayList<>();
+    public static int MAX = 9999999;
     
     public static enum Type {
         RESERVED_WORD, IDENTIFIER, DELIMITER, INTEGER_NUMBER, DOUBLE_NUMBER,
         ASSIGN_OPERATOR, RELAT_OPERATOR, ADD_OPERATOR, MULT_OPERATOR, UNKNOWN
     }
 
-    public static boolean LexicalAnalyzer(String filename) throws FileNotFoundException, IOException {
-        BufferedReader buffer = new BufferedReader(new FileReader(filename));
+    public static String check(int i, String from, String alph, int ret_max_len) {
         char c;
-        long nline = 0, open_comment_line = 0;
-        boolean isComment = false;
-        String line, aux;
-        String[] words;
+        int count = 0, size = from.length();
+        String aux = "";
         
-        do {
+        while(i < size && count < ret_max_len) {
+            c = from.charAt(i++);
+            
+            if(alph.contains("" + c)) {
+                aux = aux + c;
+                count++;
+            } else break;
+        }
+
+        return (ret_max_len != MAX && i < ret_max_len) ? "" : aux;
+    }
+    
+    public static boolean addToken(String name, Type tp, long nline) {
+        return table.add(new Token(name, tp.name(), nline));
+    }
+
+    //@SuppressWarnings("empty-statement")
+    public static boolean LexicalAnalyzer(String filename) throws FileNotFoundException, IOException {
+        String[] words;
+        String line, aux;
+        boolean isComment = false;
+        int nline = 0, open_comment_line = 0, i = 0;
+        BufferedReader buffer = new BufferedReader(new FileReader(filename));
+       
+        while(true) {
             line = buffer.readLine();
             
-            if(line != null) {
-                nline++;
-                
-                words = line.split(" ");
+            if(line == null) break;
+            
+            nline++;
 
-                for(String word:words) {
-                    if(!isComment || word.contains(language.getCloseCommentSimbol())) {
-                        for(int i = 0; i < word.length(); i++) {
-                            c = word.charAt(i);
-                            if(c == '\t') continue;
+            words = line.split(" ");
 
-                            if(!isComment) {
-                                if(language.getNumbersAlphabet().contains("" + c)) {
-                                    aux = identify(word, language.getValueAlphabet(), nline, i);
+            for(String word:words) {
+                while(i < word.length()) {
+                    if(!isComment) {
+                        aux = check(i, word, language.getNumbersAlphabet(), MAX);
 
-                                    if(aux.contains("" + '.')) addToken(aux, Type.DOUBLE_NUMBER, nline);
-                                        else addToken(aux, Type.INTEGER_NUMBER, nline);
-
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getIdentifiersAlphabet().contains("" + c)) { 
-                                    aux = identify(word, language.getIdentifiersAlphabet(), nline, i);
-
-                                    if(language.getReservedWordsAlphabet().contains(aux)) {
-                                        if(language.getAddOperatorsAlphabet().contains(aux))
-                                            addToken(aux, Type.ADD_OPERATOR, nline);
-                                        else if(language.getMultOperatorsAlphabet().contains(aux))
-                                            addToken(aux, Type.MULT_OPERATOR, nline);
-                                        else
-                                            addToken(aux, Type.RESERVED_WORD, nline);
-                                    } else addToken(aux, Type.IDENTIFIER, nline);
-
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getAssignOperatorsAlphabet().contains("" + c)) {
-                                    aux = identify(word, language.getAssignOperatorsAlphabet(), nline, i);
-
-                                    if(aux.contains(language.getAssignOperatorsAlphabet()) && aux.length() == language.getAssignOperatorsAlphabet().length())
-                                        addToken(aux, Type.ASSIGN_OPERATOR, nline);
-                                    else if(language.getRelatOperatorsAlphabet().contains(aux))
-                                        addToken(aux, Type.RELAT_OPERATOR, nline);
-                                    else 
-                                        addToken(aux, Type.DELIMITER, nline);
-
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getDelimitersAlphabet().contains("" + c)) {
-                                        aux = identify(word, language.getDelimitersAlphabet(), nline, i); 
-                                        
-                                        for(int k = 0; k < aux.length(); k++)
-                                            addToken("" + aux.charAt(k), Type.DELIMITER, nline);
-
-                                        i += aux.length() - 1;
-                                }
-                                else if(language.getAddOperatorsAlphabet().contains("" + c)) {
-                                    aux = identify(word, language.getAddOperatorsAlphabet(), nline, i); 
-                                    addToken(aux, Type.ADD_OPERATOR, nline);
-
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getMultOperatorsAlphabet().contains("" + c)) {
-                                    aux = identify(word, language.getMultOperatorsAlphabet(), nline, i); 
-                                    addToken(aux, Type.MULT_OPERATOR, nline);
-
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getRelatOperatorsAlphabet().contains("" + c)) {
-                                    aux = identify(word, language.getRelatOperatorsAlphabet(), nline, i);
-
-                                    if(language.getRelatOperatorsAlphabet().contains(aux))
-                                        addToken(aux, Type.RELAT_OPERATOR, nline);
-                                    else {
-                                        for(int k = 0; k < aux.length(); k++)
-                                            addToken("" + aux.charAt(k), Type.DELIMITER, nline);
-                                    }
-                                    
-                                    i += aux.length() - 1;
-                                }
-                                else if(language.getOpenCommentSimbol().contains("" + c)) {
-                                    isComment = true;
-                                    open_comment_line = nline;
-                                }
-                                else {
-                                    System.err.println("Error ln:" + nline + " - invalid character (" + c + ")");
-                                    return false;
-                                }
-
-                                aux = "";
-                            } else if(language.getCloseCommentSimbol().contains("" + c)) {
-                                isComment = false;
-                            }
+                        if(!aux.equals("")) {
+                            addToken(aux, (aux.contains(".") ? Type.DOUBLE_NUMBER : Type.INTEGER_NUMBER), nline);
+                            i += aux.length();
+                            continue; // Gargalo (porem permite deteccao de character invalido)
                         }
-                    }
+
+                        aux = check(i, word, language.getIdentifiersAlphabet(), MAX);
+
+                        if(!aux.equals("")) {
+                            addToken(aux, (
+                                (language.getReservedWordsAlphabet().contains(aux)) ? (
+                                    (language.getAddOperatorsAlphabet().contains(aux)) ? 
+                                        Type.ADD_OPERATOR : 
+                                        (language.getMultOperatorsAlphabet().contains(aux)) ? 
+                                            Type.MULT_OPERATOR : 
+                                                Type.RESERVED_WORD) : Type.IDENTIFIER), nline
+                            );
+                            i += aux.length();
+                            continue; // Gargalo (porem permite deteccao de character invalido)
+                        }
+
+                        aux = check(i, word, language.getAssignOperatorsAlphabet(), language.getAssignOperatorsAlphabet().length());
+
+                        if(!aux.equals("") && language.getAssignOperatorsAlphabet().contains(aux)) {
+                            addToken(aux, Type.ASSIGN_OPERATOR, nline);
+                            i += aux.length();
+                            continue;
+                        }
+
+                        aux = check(i, word, language.getAddOperatorsAlphabet(), 1);
+
+                        if(!aux.equals("")) {
+                            if(!(aux.equals("o") || aux.equals("r"))) {
+                                addToken(aux, Type.ADD_OPERATOR, nline);
+                                i += aux.length();
+                            }
+                            continue;
+                        }
+
+                        aux = check(i, word, language.getMultOperatorsAlphabet(), 1);
+
+                        if(!aux.equals("")) {
+                            if(!(aux.equals("a") || aux.equals("n") || aux.equals("d"))) {
+                                addToken(aux, Type.MULT_OPERATOR, nline);
+                                i += aux.length();
+                            }
+                            continue;
+                        }
+
+                        aux = check(i, word, language.getDelimitersAlphabet(), 1);
+
+                        if(!aux.equals("")) {
+                            addToken(aux, Type.DELIMITER, nline);
+                            i += aux.length();
+                            continue;
+                        }
+
+                        aux = check(i, word, language.getRelatOperatorsAlphabet(), 1);
+
+                        if(!aux.equals("")) {
+                            aux += check(i+1, word, language.getRelatOperatorsAlphabet(), 1);
+                            if(!language.getRelatOperatorsAlphabet().contains(aux))       // Caso =>, == ou =< (invalidos)
+                                aux = "" + aux.charAt(0);
+
+                            addToken(aux, Type.RELAT_OPERATOR, nline);
+                            i += aux.length();
+                            continue;
+                        }
+
+                        aux = check(i, word, language.getOpenCommentSimbol(), 1);
+
+                        if(!aux.equals("")) {
+                            isComment = true;
+                            open_comment_line = nline;
+                            continue;
+                        }
+                        
+                        if(word.charAt(i++) == '\t') continue;
+
+                        System.err.println("Error ln:" + nline + " - invalid character '" + word.charAt(i) + "'");
+                        return false;
+                    } else if(word.contains(language.getCloseCommentSimbol())) {
+                            i = word.indexOf(language.getCloseCommentSimbol()) + 1;
+                            isComment = false;
+                    } else break;
                 }
+                i = 0;
             }
-        } while (line != null);
+        }
         
         if(isComment) {
             System.err.println("Error ln:" + open_comment_line + " - comment has been opened and not closed!");
@@ -396,10 +422,6 @@ public class Compiler {
         }
         
         return tk;
-    }
-    
-    public static boolean addToken(String name, Type tp, long nline) {
-        return table.add(new Token(name, tp.name(), nline));
     }
     
     public static Token nextToken(Iterator<Token> it) {
