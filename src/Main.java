@@ -1,4 +1,5 @@
-import Analizer.Compiler;
+import Compiler.Compiler;
+import Language.LanguageX;
 import java.io.IOException;
 
 /*
@@ -18,11 +19,8 @@ public class Main {
      */
     public static void main(String[] args) {
         try {
-            if(Compiler.LexicalAnalyzer("D:/teste.txt")) {
-                Compiler.printTable();
-                Compiler.SyntaxAnalyzer();
-            }
-                
+            Compiler compiler = new Compiler(new LanguageX(), "teste.txt");
+            compiler.compile(true);
         } catch (IOException ex) {
             System.err.println("Error: File cannot opened!");
         }
