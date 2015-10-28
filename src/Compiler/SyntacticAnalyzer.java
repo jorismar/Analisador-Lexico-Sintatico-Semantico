@@ -21,7 +21,6 @@ public class SyntacticAnalyzer {
     /****************** SEMANTIC ******************/
         private final Stack scope_stack;
         private final Stack operat_stack;
-        private String semantic_expected_type;
         private int current_stack_pos;
         private final Token mark = new Token("$", "mark", 0);
     /**********************************************/
@@ -528,6 +527,7 @@ public class SyntacticAnalyzer {
             }
         }
         
+
         if(aux.getType().equals(lang.getAssignOperatorType())) {
             aux = (Token) this.operat_stack.pop();
             last = aux.getType();
