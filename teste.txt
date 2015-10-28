@@ -1,8 +1,10 @@
 program Test3; {programa para teste do lexico}
 var
-   NUMERO  : integer;
+   NUMERO, m : integer;
    final, teste : integer;
-
+   bool : boolean;
+   NUMB : real;
+{
 procedure findMin(x, y, z: integer; war: integer); 
 
 begin
@@ -13,12 +15,18 @@ begin
    
    if z <m then
       m := z;
-end; { end of procedure findMin }  
-
-begin  {tente gerar um erro usando um caracter não permitido.. tipo $}
-   NUMERO := 3 * 5 + 7 - 9.2;
+end;
+}
+begin  {tente gerar um erro usando um caracter nï¿½o permitido.. tipo $}
+{   NUMERO := 3 * 5 + 7 - 9.2;
+   bool := true;
+   bool := false;
    if (NUMERO = 20) and (NUMERO <=90) then begin
-      NUMERO := teste (10 / 3);
+      NUMERO := 10 / 3;
       final := NUMERO + 1
-   end  
+   end  }
+    bool := false;
+    bool := 10 > 2;
+    bool := true and false;
+
 end.

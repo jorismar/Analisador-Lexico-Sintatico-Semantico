@@ -25,8 +25,9 @@ public class LanguageX implements Syntax{
     private final String close_comment = "}";
     
     private final String[] reserved_words = {"if", "then", "end", "boolean", "procedure", "program", "integer", "else", "begin", "do", "var", "real", "not", "while"};
-    private final String add_operator_words = "or";
-    private final String mult_operator_words = "and";
+    private final String[] boolean_value_words = {"true", "false"};
+    private final String add_operator_word = "or";
+    private final String mult_operator_word = "and";
     
     private final Alphabet[] alphabet;
 
@@ -51,21 +52,26 @@ public class LanguageX implements Syntax{
         return false;
     }
     
+    private boolean isBooleanValue(String word) {
+        return word.equals(this.boolean_value_words[0]) || word.equals(this.boolean_value_words[1]);
+    }
+    
     private boolean isAddOperatorWord(String word) {
-        return word.equals(this.add_operator_words);
+        return word.equals(this.add_operator_word);
     }
     
     private boolean isMultOperatorWord(String word) {
-        return word.equals(this.mult_operator_words);
+        return word.equals(this.mult_operator_word);
     }
     
     @Override 
     public String identWord(String word) {
-        if(this.isReservedWord(word)) return "RESERVED WORD";
-        else if(this.isAddOperatorWord(word)) return "ADD OPERATOR";
-        else if(this.isMultOperatorWord(word)) return "MULT OPERATOR";
+        if(this.isReservedWord(word)) return this.getReservedType();
+        else if(this.isAddOperatorWord(word)) return this.getAddOperatorType();
+        else if(this.isMultOperatorWord(word)) return this.getMultOperatorType();
+        else if(this.isBooleanValue(word)) return this.getBooleanType();
         
-        return "IDENTIFIER";
+        return this.getIdentifierType();
     }
     
     @Override 
@@ -144,7 +150,7 @@ public class LanguageX implements Syntax{
     }
     
     public String getBooleanType() {
-        return "BOOLEAN";
+        return "BOOLEAN VALUE";
     }
     
     @Override 

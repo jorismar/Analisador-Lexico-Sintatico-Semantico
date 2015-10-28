@@ -6,11 +6,13 @@
 package Compiler;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  *
  * @author Jorismar
  */
-public class Tree {
-
+public class SymbolTable {
+    private Stack table;
+    
 }

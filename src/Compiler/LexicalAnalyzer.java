@@ -57,10 +57,10 @@ public class LexicalAnalyzer {
                 
     private boolean identify(String word, int start_pos, int nline, boolean info) {
         char c;
-        int i = start_pos, l;
+        int i = start_pos, l = 0;
         String aux = "", type = "";
         
-        for(l = 0; l < language.amountAlphabets() && i < word.length(); l++) {
+        while(l < language.amountAlphabets() && i < word.length()) {
             do {
                 c = word.charAt(i);
                 
@@ -71,22 +71,23 @@ public class LexicalAnalyzer {
                 
                 i++;
             } while(l < language.amountAlphabets() && i < word.length());
-                    
+
             if(!aux.equals("")) {
                 /* IDENTIFICAÇÃO DE VALORES */
                 if(type.equals("") && language.isValue(l)) {
                     if((i + 1 < word.length()) && language.getDoubleSeparator().contains("" + word.charAt(i)) && language.getAlphabet(l).contains("" + word.charAt(i + 1))) {
                         aux = aux + word.charAt(i++);
-                        l--;
+                        //l--;
                         type = language.getDoubleType();
                         continue;
                     } else type = language.getIntegerType();
                 }
                 
                 /* DISTINÇÃO ENTRE OPERADORES (ATRIB-REALAT-DELIMT) */
-                if(language.isAssignOperator(l) && !language.getAlphabet(l).equals(aux)) 
+                if(language.isAssignOperator(l) && !language.getAlphabet(l).equals(aux)) { 
                     i--;
-                else {
+                    l++;
+                } else {
                     /* IDENTIFICAÇÃO DE PALAVRAS */
                     if(language.isWord(l)) 
                         type = language.identWord(aux);
@@ -101,7 +102,7 @@ public class LexicalAnalyzer {
                 }
 
                 aux = "";
-            }
+            } else l++;
         }
         
         if(l >= language.amountAlphabets()) {
@@ -114,6 +115,11 @@ public class LexicalAnalyzer {
     }
 
     private void error(String msg) {
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException ex) {
+            System.err.println(ex);
+        }
         System.err.println(msg);
         System.exit(1);
     }
