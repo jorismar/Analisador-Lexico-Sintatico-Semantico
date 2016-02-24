@@ -540,6 +540,7 @@ public class SyntacticAnalyzer {
                     this.error("Error ln" + aux.getLine() + ": invalid types - expected '" + aux.getType() + "' and received '" + type + "'");
             }
         }
+        this.push_operat(this.mark);
     }
     
     public void printStack(Stack stack) {
